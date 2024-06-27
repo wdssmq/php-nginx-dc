@@ -2,6 +2,10 @@
 
 用于部署多站点 PHP + Nginx 环境的 Docker Compose 配置，使用 webdevops/php-nginx；
 
+带 SSL 证书申请和续期方案
+
+带 MySQL 数据库；
+
 ## 镜像说明
 
 webdevops/php-nginx
@@ -62,7 +66,64 @@ server {
 
 ```
 
-4、{{SSL 配置占位}}
+4、SSL 申请及续期：
+
+配置中`acme.sh` 容器并以守护进程方式运行，用于申请和续期 SSL 证书；
+
+「[说明 · acmesh-official/acme.sh Wiki](https://github.com/acmesh-official/acme.sh/wiki/%E8%AF%B4%E6%98%8E "说明 · acmesh-official/acme.sh Wiki")」
+
+「[Run acme.sh in docker](https://github.com/acmesh-official/acme.sh/wiki/Run-acme.sh-in-docker#3-run-acmesh-as-a-docker-daemon "Run acme.sh in docker")」
+
+```bash
+# 邮箱注册
+sudo docker exec -it acme.sh -register-account -m mail@example.com
+
+# 申请证书
+sudo docker exec -it acme.sh -issue -d site1.com --webroot /app/site1
+
+# 部署证书到实际路径
+sudo docker exec \
+    -e DEPLOY_DOCKER_CONTAINER_LABEL=for_deploy_ssl \
+    -e DEPLOY_DOCKER_CONTAINER_KEY_FILE=/opt/docker/etc/nginx/ssl/site1.com/key.pem \
+    -e DEPLOY_DOCKER_CONTAINER_CERT_FILE="/opt/docker/etc/nginx/ssl/site1.com/cert.pem" \
+    -e DEPLOY_DOCKER_CONTAINER_CA_FILE="/opt/docker/etc/nginx/ssl/site1.com/ca.pem" \
+    -e DEPLOY_DOCKER_CONTAINER_FULLCHAIN_FILE="/opt/docker/etc/nginx/ssl/site1.com/full.pem" \
+    -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" \
+    acme.sh --deploy -d site1.com --deploy-hook docker
+
+# 证书续期
+sudo docker exec -it acme.sh --cron
+# ↑ 定时执行可实现自动续期，配置 crontab -e —— `0 0 * * * docker exec -it acme.sh --cron`
+
+
+```
+
+「[deploy to docker containers](https://github.com/acmesh-official/acme.sh/wiki/deploy-to-docker-containers "deploy to docker containers")」
+
+```nginx
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name site1.com;
+
+    root "/app/site1";
+    index index.php index.html index.htm;
+
+    include /opt/docker/etc/nginx/vhost.common.d/*.conf;
+
+
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers "TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5";
+
+    ssl_prefer_server_ciphers on;
+
+    ssl_certificate     /opt/docker/etc/nginx/ssl/site1.com/full.pem;
+    ssl_certificate_key /opt/docker/etc/nginx/ssl/site1.com/key.pem;
+}
+
+```
 
 5、伪静态：`vhost.common.d/10-location-root.conf` 已经包含了一个通用的规则；
 

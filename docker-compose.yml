@@ -9,6 +9,8 @@ services:
         ports:
             - "80:80"
             - "443:443"
+        labels:
+            - for_deploy_ssl
         volumes:
             - ./data-www:/app
             - ./data-nginx:/opt/docker/etc/nginx
@@ -16,6 +18,17 @@ services:
             - MySQL
         networks:
             - net_web
+
+    # Run acme.sh as a docker daemon
+    acme.sh:
+        container_name: acme.sh
+        image: neilpang/acme.sh
+        restart: unless-stopped
+        command: daemon
+        volumes:
+            - ./data-nginx/acme.sh:/acme.sh
+            - ./data-www:/app
+            - /var/run/docker.sock:/var/run/docker.sock
 
     # MySQL 8.0
     MySQL:

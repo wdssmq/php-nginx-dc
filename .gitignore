@@ -9,4 +9,9 @@
 /.env
 
 # 04
+/data-nginx/acme.sh/
 /data-nginx/vhost/*.conf
+/data-nginx/ssl/*/
+
+# 05
+note.md
