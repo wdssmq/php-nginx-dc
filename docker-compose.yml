@@ -1,0 +1,40 @@
+version: '3'
+services:
+
+    # PHP 8.2 + Nginx
+    www_app:
+        container_name: www_app
+        image: webdevops/php-nginx:8.2-alpine
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./data-www:/app
+            - ./data-nginx:/opt/docker/etc/nginx
+        depends_on:
+            - MySQL
+        networks:
+            - net_web
+
+    # MySQL 8.0
+    MySQL:
+        container_name: MySQL
+        image: mysql/mysql-server:8.0
+        restart: unless-stopped
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_HOST: 172.%.%.%
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-shujukumima1233}
+        volumes:
+            - ./data-mysql:/var/lib/mysql:rw
+        networks:
+            - net_web
+
+networks:
+    net_web:
+        external: false
+
+# 执行如下命令后可设置为 external: true
+# docker network create -d bridge net_web
