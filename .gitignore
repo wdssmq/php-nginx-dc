@@ -1,0 +1,9 @@
+# 01
+/data-mysql
+
+# 02
+/data-www/*
+!/data-www/def
+
+# 03
+nginx/vhost/*.conf
