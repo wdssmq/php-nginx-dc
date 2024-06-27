@@ -6,4 +6,7 @@
 !/data-www/def
 
 # 03
-nginx/vhost/*.conf
+/.env
+
+# 04
+/data-nginx/vhost/*.conf
