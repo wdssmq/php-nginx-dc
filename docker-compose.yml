@@ -29,6 +29,8 @@ services:
             - ./data-nginx/acme.sh:/acme.sh
             - ./data-www:/app
             - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - net_web
 
     # MySQL 8.0
     MySQL:
