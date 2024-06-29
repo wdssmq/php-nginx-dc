@@ -78,10 +78,20 @@ server {
 # 邮箱注册
 sudo docker exec -it acme.sh -register-account -m mail@example.com
 
-# 申请证书
+# 申请证书 - 方式一 - 文件验证
 sudo docker exec -it acme.sh -issue -d site1.com --webroot /app/site1
 
-# 部署证书到实际路径
+# 申请证书 - 方式二 - DNS 验证 - 支持泛域名
+# https://dash.cloudflare.com/profile/api-tokens
+sudo docker exec \
+    -e CF_Key="CF_KeyCF_KeyCF_KeyCF_KeyCF_Key" \
+    -e CF_Email="mail@example.com" \
+    acme.sh --issue -d site1.com -d *.site1.com --dns dns_cf
+
+# ↑ 两个 -d 参数，一个是主域名，一个是泛域名
+# 更多 DNS API 配置见：https://github.com/acmesh-official/acme.sh/wiki/dnsapi
+
+# 部署证书到实际路径，替换 site1.com 为实际域名后执行
 sudo docker exec \
     -e DEPLOY_DOCKER_CONTAINER_LABEL=for_deploy_ssl \
     -e DEPLOY_DOCKER_CONTAINER_KEY_FILE=/opt/docker/etc/nginx/ssl/site1.com/key.pem \
@@ -91,9 +101,9 @@ sudo docker exec \
     -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" \
     acme.sh --deploy -d site1.com --deploy-hook docker
 
-# 证书续期
+# 证书续期：上述操作的参数会记录在 ./data-nginx/acme.sh 内，可直接执行下方命令续期
 sudo docker exec -it acme.sh --cron
-# ↑ 定时执行可实现自动续期，配置 crontab -e —— `0 0 * * * docker exec -it acme.sh --cron`
+# ↑ 定时执行配置 crontab -e —— `0 0 * * * docker exec -it acme.sh --cron`
 
 
 ```
