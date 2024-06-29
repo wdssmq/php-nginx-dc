@@ -68,7 +68,7 @@ server {
 
 4、SSL 申请及续期：
 
-配置中`acme.sh` 容器并以守护进程方式运行，用于申请和续期 SSL 证书；
+容器中附带 `acme.sh` 并以守护进程方式运行，用于申请和续期 SSL 证书；
 
 「[说明 · acmesh-official/acme.sh Wiki](https://github.com/acmesh-official/acme.sh/wiki/%E8%AF%B4%E6%98%8E "说明 · acmesh-official/acme.sh Wiki")」
 
@@ -77,6 +77,9 @@ server {
 ```bash
 # 邮箱注册
 sudo docker exec -it acme.sh -register-account -m mail@example.com
+
+# 默认 CA 为 ZeroSSL ECC，可切换为 Let's Encrypt
+sudo docker exec -it acme.sh --set-default-ca --server letsencrypt
 
 # 申请证书 - 方式一 - 文件验证
 sudo docker exec -it acme.sh -issue -d site1.com --webroot /app/site1
