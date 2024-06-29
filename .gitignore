@@ -14,4 +14,5 @@
 /data-nginx/ssl/*/
 
 # 05
+.history
 note.md
